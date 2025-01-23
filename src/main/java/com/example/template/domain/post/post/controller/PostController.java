@@ -1,13 +1,13 @@
 package com.example.template.domain.post.post.controller;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/posts")
@@ -28,30 +28,24 @@ public class PostController {
                 """;
     }
 
+    @Getter
+    @AllArgsConstructor
+    public static class WriteForm {
+        @NotBlank(message ="제목을 입력하세요.") //<--이게 valid
+        @Length(min = 5, message= "제목을 5자 이상 입력하세요.") //<--이게 valid
+        private String title;
+        @NotBlank(message = "내용을 입력하세요.")
+        @Length(min = 10, message = "내용을 10자 이상 입력하세요.")
+        private String content;
+    }
+
     @PostMapping("/write")
     @ResponseBody
     public String doWrite(
-        @NotBlank
-        @Length(min = 5)
-        String title, //null이면 안 되고 5글자 이상이어야 함
-        @NotBlank
-        @Length(min = 10)
-        String content //null이면 안되고 10글자 이사이어야 함
+        @ModelAttribute //인자를 객체로 받겠다
+        @Valid //valid를 활성화 시켜줌
+        WriteForm form
     ) {
-
-//
-//        if(title.isBlank() || title == null) {
-//            return getFromHtml("제목을 입력해주세요.");
-//        }
-//        if(content.isBlank() || content == null) {
-//            return getFromHtml("내용을 입력해주세요.");
-//        }
-//        if(title.length() < 5) {
-//            return getFromHtml("제목을 5자 이상 입력해주세요.");
-//        }
-//        if(content.length() < 10) {
-//            return getFromHtml("내용을 10자 이상 입력해주세요.");
-//        }
 
         return """
                 <div>
@@ -60,7 +54,7 @@ public class PostController {
                 </br>
                 <h3>내용 : %s</h3>
                 </div>
-                """.formatted(title, content);
+                """.formatted(form.getTitle(), form.getContent());
     }
 
     private String getFromHtml(String errorMsg) {
