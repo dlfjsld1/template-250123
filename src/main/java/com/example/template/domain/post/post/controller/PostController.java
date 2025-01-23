@@ -11,9 +11,9 @@ public class PostController {
 
     @GetMapping("/write")
     @ResponseBody
-    public String write() {
+    public String showWrite() {
         return """
-                <form action="/showWrite">
+                <form action="/posts/doWrite">
                     <input type="text" name="title" placeholders="제목" />
                     </br>
                     <textarea name="content" placeholders="내용"></textarea>
@@ -21,5 +21,16 @@ public class PostController {
                     <input type="submit" value="등록" />
                 </form>
                 """;
+    }
+
+    @GetMapping("/doWrite")
+    @ResponseBody
+    public String doWrite(String title, String content) {
+        return """
+                <h1>게시물 조회</h1>
+                <h2>제목 : %s</h2>
+                </br>
+                <h3>내용 : %s</h3>
+                """.formatted(title, content);
     }
 }
