@@ -2,6 +2,7 @@ package com.example.template.domain.post.post.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -13,7 +14,7 @@ public class PostController {
     @ResponseBody
     public String showWrite() {
         return """
-                <form action="/posts/doWrite">
+                <form action="/posts/doWrite" method="post">
                     <input type="text" name="title" placeholders="제목" />
                     </br>
                     <textarea name="content" placeholders="내용"></textarea>
@@ -23,7 +24,7 @@ public class PostController {
                 """;
     }
 
-    @GetMapping("/doWrite")
+    @PostMapping("/doWrite")
     @ResponseBody
     public String doWrite(String title, String content) {
         return """
