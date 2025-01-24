@@ -1,74 +1,119 @@
 package com.example.template.domain.post.post.controller;
 
+import com.example.template.domain.post.post.entity.Post;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/posts")
-@Validated
 public class PostController {
 
-    @GetMapping("/write")
-    @ResponseBody
-    public String showWrite() {
-        return """
-                <form method="post">
-                    <input type="text" name="title" placeholders="제목" />
-                    </br>
-                    <textarea name="content" placeholders="내용"></textarea>
-                    </br>
-                    <input type="submit" value="등록" />
-                </form>
-                """;
+    private List<Post> posts = new ArrayList<>();
+    private long lastId = 3L;
+
+    public PostController() {
+        Post p1 = Post.builder()
+                .id(1L)
+                .title("title1")
+                .content("content1")
+                .build();
+        Post p2 = Post.builder()
+                .id(2L)
+                .title("title2")
+                .content("content2")
+                .build();
+        Post p3 = Post.builder()
+                .id(3L)
+                .title("title3")
+                .content("content3")
+                .build();
+        posts.add(p1);
+        posts.add(p2);
+        posts.add(p3);
     }
 
-    @Getter
+    @GetMapping("/write")
+    @ResponseBody // View를 사용하지 않고, 데이터를 그대로 응답
+    public String showWrite() {
+        return getFormHtml("", "", "");
+    }
+
     @AllArgsConstructor
+    @Getter
     public static class WriteForm {
-        @NotBlank(message ="제목을 입력하세요.") //<--이게 valid
-        @Length(min = 5, message= "제목을 5자 이상 입력하세요.") //<--이게 valid
+        @NotBlank(message = "01-제목을 입력해주세요.")
+        @Length(min = 5, message = "02-제목은 5글자 이상입니다.")
         private String title;
-        @NotBlank(message = "내용을 입력하세요.")
-        @Length(min = 10, message = "내용을 10자 이상 입력하세요.")
+        @NotBlank(message = "03-내용을 입력해주세요.")
+        @Length(min = 10, message = "04-내용은 10글자 이상입니다.")
         private String content;
     }
 
     @PostMapping("/write")
-    @ResponseBody
-    public String doWrite(
-        @ModelAttribute //인자를 객체로 받겠다
-        @Valid //valid를 활성화 시켜줌
-        WriteForm form
-    ) {
+    public String doWrite(@Valid WriteForm form, BindingResult bindingResult) {
 
-        return """
-                <div>
-                <h1>게시물 조회</h1>
-                <h2>제목 : %s</h2>
-                </br>
-                <h3>내용 : %s</h3>
-                </div>
-                """.formatted(form.getTitle(), form.getContent());
+        if (bindingResult.hasErrors()) {
+
+            String errorMessage = bindingResult.getFieldErrors()
+                    .stream()
+                    .map(err -> err.getDefaultMessage())
+                    .sorted()
+                    .map(msg->msg.split("-")[1])
+                    .collect(Collectors.joining("<br>"));
+
+            return getFormHtml(errorMessage, form.getTitle(), form.getContent());
+        }
+
+        Post post = Post.builder()
+                .id(lastId++)
+                .title(form.getTitle())
+                .content(form.getContent())
+                .build();
+
+        posts.add(post);
+
+        return "redirect:/posts";
     }
 
-    private String getFromHtml(String errorMsg) {
-
+    private String getFormHtml(String errorMsg, String title, String content) {
         return """
                 <div>%s</div>
                 <form method="post">
-                    <input type="text" name="title" placeholders="제목" />
-                    </br>
-                    <textarea name="content" placeholders="내용"></textarea>
-                    </br>
-                    <input type="submit" value="등록" />
+                  <input type="text" name="title" placeholder="제목" value="%s"/> <br>
+                  <textarea name="content">%s</textarea> <br>
+                  <input type="submit" value="등록" /> <br>
                 </form>
-                """.formatted(errorMsg);
-
+                <a href="/posts">목록</a>
+                """.formatted(errorMsg, title, content);
     }
+
+    @GetMapping
+    @ResponseBody
+    private String showList() {
+        String lis = posts.stream()
+                .map(post -> "<li>" + post.getTitle() + "</li>")
+                .collect(Collectors.joining());
+
+        String ul = "<ul>" + lis + "</ul>";
+
+        return """
+                <div>글 목록</div>
+                %s
+                <a href="/posts/write">글쓰기</a>
+                """.formatted(ul);
+    }
+
 }
