@@ -9,11 +9,13 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/posts")
@@ -26,19 +28,19 @@ public class PostController {
         Post p1 = Post.builder()
                 .id(1L)
                 .title("title1")
-                .content("title1")
+                .content("content1")
                 .build();
 
         Post p2 = Post.builder()
                 .id(2L)
                 .title("title2")
-                .content("title2")
+                .content("content2")
                 .build();
 
         Post p3 = Post.builder()
                 .id(3L)
                 .title("title3")
-                .content("title3")
+                .content("content3")
                 .build();
 
         posts.add(p1);
@@ -70,14 +72,6 @@ public class PostController {
 
         if (bindingResult.hasErrors()) {
 
-//            String errorMessage = bindingResult.getFieldErrors()
-//                    .stream()
-//                    .map(err -> err.getDefaultMessage())
-//                    .sorted()
-//                    .map(msg -> msg.split("-")[1])
-//                    .collect(Collectors.joining("<br>"));
-//
-//            model.addAttribute("errorMessage", errorMessage);
 
             return "domain/post/post/write";
         }
@@ -97,16 +91,25 @@ public class PostController {
     @GetMapping
     private String showList(Model model) {
 
-        String lis = posts.stream()
-                .map(p -> "<li>" + p.getTitle() + "</li>")
-                .collect(Collectors.joining());
-
-        String ul = "<ul>" + lis + "</ul>";
-
         model.addAttribute("posts", posts);
-
         return "domain/post/post/list";
     }
 
+    @GetMapping("/detail/{id}")
+    private String detail(
+            @PathVariable
+            long id,
+            Model model
+    ) {
+
+        Post post = posts.stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .get();
+
+        model.addAttribute("post", post);
+
+        return "domain/post/post/detail";
+    }
 
 }
